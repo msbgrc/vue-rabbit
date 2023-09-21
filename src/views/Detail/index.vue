@@ -1,20 +1,49 @@
 <script setup>
-import DetailHot from './components/DetailHot.vue'
-import { getDetail } from '@/apis/detail'
-import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
-const goods = ref({})
-const route = useRoute()
+import DetailHot from "./components/DetailHot.vue";
+import { getDetail } from "@/apis/detail";
+import { onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import { useCartStore } from "@/stores/cart";
+import { ElMessage } from 'element-plus'
+
+const cartStore = useCartStore();
+const goods = ref({});
+const route = useRoute();
 const getGoods = async () => {
-  const res = await getDetail(route.params.id)
-  goods.value = res.result
-}
-onMounted(() => getGoods())
+  const res = await getDetail(route.params.id);
+  goods.value = res.result;
+};
+onMounted(() => getGoods());
 
 //sku规格更改时
-const skuChange = (sku) =>{
-  console.log(sku)
-}
+let skuObj = {};
+const skuChange = (sku) => {
+  console.log(sku);
+  skuObj = sku;
+};
+
+//数据
+const count = ref(1);
+
+//添加购物车
+const addCart = () => {
+  if (skuObj.skuId) {
+    cartStore.addCart({
+      id: goods.value.id,
+      name: goods.value.name,
+      picture: goods.value.mainPictures[0],
+      price: goods.value.price,
+      count: count.value,
+      skuId: skuObj.skuId,
+      attrsText: skuObj.specsText,
+      selected: true,
+    });
+  }
+  else{
+    // 规格没有选择 提示用户
+    ElMessage.warning('请选择规格')
+  }
+};
 </script>
 
 <template>
@@ -23,11 +52,15 @@ const skuChange = (sku) =>{
       <div class="bread-container">
         <el-breadcrumb separator=">">
           <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item :to="{ path: `/category/${goods.categories[1].id}` }">{{ goods.categories[1].name }}
+          <el-breadcrumb-item
+            :to="{ path: `/category/${goods.categories[1].id}` }"
+            >{{ goods.categories[1].name }}
           </el-breadcrumb-item>
-          <el-breadcrumb-item :to="{ path: `/category/sub/${goods.categories[0].id}` }">{{goods.categories[0].name}}
+          <el-breadcrumb-item
+            :to="{ path: `/category/sub/${goods.categories[0].id}` }"
+            >{{ goods.categories[0].name }}
           </el-breadcrumb-item>
-          <el-breadcrumb-item>{{goods.name}}</el-breadcrumb-item>
+          <el-breadcrumb-item>{{ goods.name }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
       <!-- 商品信息 -->
@@ -41,33 +74,33 @@ const skuChange = (sku) =>{
               <ul class="goods-sales">
                 <li>
                   <p>销量人气</p>
-                  <p> {{goods.salesCount}}+ </p>
+                  <p>{{ goods.salesCount }}+</p>
                   <p><i class="iconfont icon-task-filling"></i>销量人气</p>
                 </li>
                 <li>
                   <p>商品评价</p>
-                  <p>{{goods.commentCount}}+</p>
+                  <p>{{ goods.commentCount }}+</p>
                   <p><i class="iconfont icon-comment-filling"></i>查看评价</p>
                 </li>
                 <li>
                   <p>收藏人气</p>
-                  <p>{{goods.collectCount}}+</p>
+                  <p>{{ goods.collectCount }}+</p>
                   <p><i class="iconfont icon-favorite-filling"></i>收藏商品</p>
                 </li>
                 <li>
                   <p>品牌信息</p>
-                  <p>{{goods.brand.name}}+</p>
+                  <p>{{ goods.brand.name }}+</p>
                   <p><i class="iconfont icon-dynamic-filling"></i>品牌主页</p>
                 </li>
               </ul>
             </div>
             <div class="spec">
               <!-- 商品信息区 -->
-              <p class="g-name"> {{goods.name}} </p>
-              <p class="g-desc">{{goods.desc}} </p>
+              <p class="g-name">{{ goods.name }}</p>
+              <p class="g-desc">{{ goods.desc }}</p>
               <p class="g-price">
-                <span>{{goods.oldPrice}}</span>
-                <span> {{goods.price}}</span>
+                <span>{{ goods.oldPrice }}</span>
+                <span> {{ goods.price }}</span>
               </p>
               <div class="g-service">
                 <dl>
@@ -87,14 +120,13 @@ const skuChange = (sku) =>{
               <!-- sku组件 -->
               <XtxSku :goods="goods" @change="skuChange"></XtxSku>
               <!-- 数据组件 -->
-
+              <el-input-number v-model="count" :min="1"></el-input-number>
               <!-- 按钮组件 -->
               <div>
-                <el-button size="large" class="btn">
+                <el-button size="large" class="btn" @click="addCart">
                   加入购物车
                 </el-button>
               </div>
-
             </div>
           </div>
           <div class="goods-footer">
@@ -107,22 +139,30 @@ const skuChange = (sku) =>{
                 <div class="goods-detail">
                   <!-- 属性 -->
                   <ul class="attrs">
-                    <li v-for="item in goods.details.properties" :key="item.value">
-                      <span class="dt">{{item.name}}</span>
-                      <span class="dd">{{item.value}}</span>
+                    <li
+                      v-for="item in goods.details.properties"
+                      :key="item.value"
+                    >
+                      <span class="dt">{{ item.name }}</span>
+                      <span class="dd">{{ item.value }}</span>
                     </li>
                   </ul>
                   <!-- 图片 -->
-                  <img v-for="img in goods.details.pictures" :src="img" :key="img" alt="">
+                  <img
+                    v-for="img in goods.details.pictures"
+                    :src="img"
+                    :key="img"
+                    alt=""
+                  />
                 </div>
               </div>
             </div>
             <!-- 24热榜+专题推荐 -->
             <div class="goods-aside">
-                <!-- 24小时 -->
-                <DetailHot :hotType="1"></DetailHot>
-                <!-- 周 -->
-                <DetailHot :hotType="2"></DetailHot>
+              <!-- 24小时 -->
+              <DetailHot :hotType="1"></DetailHot>
+              <!-- 周 -->
+              <DetailHot :hotType="2"></DetailHot>
             </div>
           </div>
         </div>
@@ -269,7 +309,7 @@ const skuChange = (sku) =>{
       flex: 1;
       position: relative;
 
-      ~li::after {
+      ~ li::after {
         position: absolute;
         top: 10px;
         left: 0;
@@ -323,7 +363,7 @@ const skuChange = (sku) =>{
       font-size: 18px;
       position: relative;
 
-      >span {
+      > span {
         color: $priceColor;
         font-size: 16px;
         margin-left: 10px;
@@ -357,14 +397,13 @@ const skuChange = (sku) =>{
     }
   }
 
-  >img {
+  > img {
     width: 100%;
   }
 }
 
 .btn {
   margin-top: 20px;
-
 }
 
 .bread-container {
