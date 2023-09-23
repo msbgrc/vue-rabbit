@@ -18,7 +18,6 @@ onMounted(() => getGoods());
 //sku规格更改时
 let skuObj = {};
 const skuChange = (sku) => {
-  console.log(sku);
   skuObj = sku;
 };
 
@@ -123,7 +122,7 @@ const addCart = () => {
               <el-input-number v-model="count" :min="1"></el-input-number>
               <!-- 按钮组件 -->
               <div>
-                <el-button size="large" class="btn" @click="addCart">
+                <el-button type="primary" size="large" class="btn" @click="addCart">
                   加入购物车
                 </el-button>
               </div>
